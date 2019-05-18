@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SOCKS-5-Proxy-Chain": {
+      "commandName": "Project",
+      "commandLineArgs": "SOCKS-5-Proxy-Authenticator.xml"
+    }
+  }
+}
