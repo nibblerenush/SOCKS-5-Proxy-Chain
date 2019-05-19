@@ -1,14 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
-using System.Xml;
-using System.Diagnostics;
-
-using System.Threading;
 using System.Threading.Tasks;
-
-using System.Text;
-using System.Reflection;
 
 namespace SOCKS_5_Proxy_Chain
 {
@@ -42,87 +36,78 @@ namespace SOCKS_5_Proxy_Chain
 
     private async void ProcessConnection(TcpClient mainTcpClient, EndPoint endPoint)
     {
-        NetworkStream netStream = mainTcpClient.GetStream();
+      NetworkStream netStream = mainTcpClient.GetStream();
+      //
+      byte[] buffer = new byte[_bufferSize];
+      int readedLength = await netStream.ReadAsync(buffer, 0, buffer.Length);
+      Socks5RequestHandshake reqHand = new Socks5RequestHandshake(buffer);
+      Debug.WriteLine("Read request handshake from client: {0}", reqHand);
+
+      // Connect to SOCKS 5 server
+      TcpClient tcpClient = new TcpClient();
+      await tcpClient.ConnectAsync(Config.GetInst().RemoteIpAddress, int.Parse(Config.GetInst().RemotePort));
+      Console.WriteLine("Remote connected: {0}", tcpClient.Client.RemoteEndPoint);
+
+      //
+      NetworkStream remoteNetStream = tcpClient.GetStream();
+      Socks5RequestHandshake reqHandToRemote = _reqHandCreator.Create();
+      Debug.WriteLine("Write new request handshake to SOCKS 5 server: {0}", reqHandToRemote);
+      byte[] writeData = reqHandToRemote.GenerateBuffer();
+      await remoteNetStream.WriteAsync(writeData, 0, writeData.Length);
+
+      //
+      readedLength = await remoteNetStream.ReadAsync(buffer, 0, buffer.Length);
+      Socks5ReplyHandshake repHandFromRemote = new Socks5ReplyHandshake(buffer);
+      Debug.WriteLine("Read reply handshake from SOCKS 5 server: {0}", repHandFromRemote);
       
-        byte[] buffer = new byte[_bufferSize];
-        int readedLength = await netStream.ReadAsync(buffer, 0, buffer.Length);
+      // Authenticate to SOCKS 5 server
+      writeData = _reqAuthCreator.GenReqAuth();
+      await remoteNetStream.WriteAsync(writeData, 0, writeData.Length);
 
-        //
-        Socks5RequestHandshake reqHand = new Socks5RequestHandshake(buffer);
-        Debug.WriteLine("Read request handshake from client: {0}", reqHand);
+      // Read authenticate reply from SOCKS 5 server
+      readedLength = await remoteNetStream.ReadAsync(buffer, 0, buffer.Length);
+      _reqAuthCreator.CheckRepAuth(buffer);
 
-        // Connect to SOCKS 5 server
-        TcpClient tcpClient = new TcpClient();
-        await tcpClient.ConnectAsync(Config.GetInst().RemoteIpAddress, int.Parse(Config.GetInst().RemotePort));
-        Console.WriteLine("Remote connected: {0}", tcpClient.Client.RemoteEndPoint);
+      //
+      Socks5ReplyHandshake repHand = new Socks5ReplyHandshake(
+        BaseConstants.Versions.SOCKS, BaseConstants.Methods.NO_AUTHENTICATION_REQUIRED);
+      writeData = repHand.GenerateBuffer();
+      await netStream.WriteAsync(writeData, 0, writeData.Length);
+      Debug.WriteLine("Write reply to client: {0}", repHand);
 
-        //
-        NetworkStream remoteNetStream = tcpClient.GetStream();
-        Socks5RequestHandshake reqHandToRemote = _reqHandCreator.Create();
-        Debug.WriteLine("Write new request handshake to SOCKS 5 server: {0}", reqHandToRemote);
-        byte[] remoteBuffer = reqHandToRemote.GenerateBuffer();
-        await remoteNetStream.WriteAsync(remoteBuffer, 0, remoteBuffer.Length);
-
-        //
-        readedLength = await remoteNetStream.ReadAsync(remoteBuffer, 0, remoteBuffer.Length);
-        Socks5ReplyHandshake repHandFromRemote = new Socks5ReplyHandshake(remoteBuffer);
-        Debug.WriteLine("Read reply handshake from SOCKS 5 server: {0}", repHandFromRemote);
-
-        // Authenticate to SOCKS 5 server
-        remoteBuffer = _reqAuthCreator.GenReqAuth();
-        await remoteNetStream.WriteAsync(remoteBuffer, 0, remoteBuffer.Length);
-
-        // Read authenticate reply from SOCKS 5 server
-        readedLength = await remoteNetStream.ReadAsync(remoteBuffer, 0, remoteBuffer.Length);
-        _reqAuthCreator.CheckRepAuth(remoteBuffer);
-
-        //
-        Socks5ReplyHandshake repHand = new Socks5ReplyHandshake(
-          BaseConstants.Versions.SOCKS, BaseConstants.Methods.NO_AUTHENTICATION_REQUIRED);
-        byte[] repHandBuffer = repHand.GenerateBuffer();
-        await netStream.WriteAsync(repHandBuffer, 0, repHandBuffer.Length);
-        Debug.WriteLine("Write reply to client: {0}", repHand);
-
-        byte[] buffer2 = new byte[_bufferSize];
-
-
-        Task t1 = Task.Run
-          (
-           async () =>
-           {
-             while (true)
-             {
-               int readedLength1 = await netStream.ReadAsync(buffer, 0, buffer.Length);
-               if (readedLength1 == 0)
-               {
-                 netStream.Close();
-                 break;
-               }
-               await remoteNetStream.WriteAsync(buffer, 0, readedLength1);
-             }
-           }
-          );
-
-        Task t2 = Task.Run
-          (
-            async () =>
+      Task fromLocalToRemote = Task.Run(
+        async () =>
+        {
+          byte[] dataBuffer = new byte[_bufferSize];
+          while (true)
+          {
+            int readedSize = await netStream.ReadAsync(dataBuffer, 0, dataBuffer.Length);
+            if (readedSize == 0)
             {
-              while (true)
-              {
-                int readedLength2 = await remoteNetStream.ReadAsync(buffer2, 0, buffer2.Length);
-                if (readedLength2 == 0)
-                {
-                  remoteNetStream.Close();
-                  break;
-                }
-                await netStream.WriteAsync(buffer2, 0, readedLength2);
-              }
+              netStream.Close();
+              Console.WriteLine("Local closed: {0}", endPoint);
+              break;
             }
-          );
+            await remoteNetStream.WriteAsync(dataBuffer, 0, readedSize);
+          }
+        });
 
-        //await t1;
-        //await t2;
-      
+      Task fromRemoteToLocal = Task.Run(
+        async () =>
+        {
+          byte[] dataBuffer = new byte[_bufferSize];
+          while (true)
+          {
+            int readedSize = await remoteNetStream.ReadAsync(dataBuffer, 0, dataBuffer.Length);
+            if (readedSize == 0)
+            {
+              remoteNetStream.Close();
+              Console.WriteLine("Remote closed: {0}", tcpClient.Client.RemoteEndPoint);
+              break;
+            }
+            await netStream.WriteAsync(dataBuffer, 0, readedSize);
+          }
+        });
     }
 
     private TcpListener _tcpListener;
