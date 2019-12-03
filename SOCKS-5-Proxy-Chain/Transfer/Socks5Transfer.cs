@@ -3,12 +3,12 @@ using System.Threading.Tasks;
 
 namespace SOCKS_5_Proxy_Chain.Transfer
 {
-  public class DefaultTransfer: Transfer
+  public class Socks5Transfer: Transfer
   {
-    public DefaultTransfer(string remoteIpAddress, int remotePort): base(remoteIpAddress, remotePort)
+    public Socks5Transfer(string remoteIpAddress, int remotePort): base(remoteIpAddress, remotePort)
     {}
     
-    // Empty method
+    // Socks5 method
     protected override async Task HandshakeAsync(TcpClient browser, TcpClient server)
     {
       await Task.CompletedTask;

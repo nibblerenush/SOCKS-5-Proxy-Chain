@@ -49,10 +49,13 @@ namespace SOCKS_5_Proxy_Chain
         case TransferType.DEFAULT:
           _transfer = new DefaultTransfer(IPAddress.Any.ToString(), 11080);
           break;
+        /*case TransferType.SOCKS5:
+          _transfer = new Socks5Transfer()
+          break;*/
       }
     }
     
     private TcpListener _tcpListener;
-    private ITransfer _transfer;
+    private DefaultTransfer _transfer;
   }
 }
