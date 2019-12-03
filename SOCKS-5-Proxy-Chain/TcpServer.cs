@@ -4,19 +4,19 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using SOCKS_5_Proxy_Chain.Connection;
+using SOCKS_5_Proxy_Chain.Transfer;
 
 namespace SOCKS_5_Proxy_Chain
 {
   public class TcpServer
   {
-    public TcpServer(int port, ConnectionType type)
+    public TcpServer(int port, TransferType type)
     {
       _tcpListener = new TcpListener(IPAddress.Any, port);
       SelectConnection(type);
     }
 
-    public TcpServer(string ipAddr, int port, ConnectionType type)
+    public TcpServer(string ipAddr, int port, TransferType type)
     {
       _tcpListener = new TcpListener(IPAddress.Parse(ipAddr), port);
       SelectConnection(type);
@@ -32,7 +32,7 @@ namespace SOCKS_5_Proxy_Chain
           token.ThrowIfCancellationRequested();
           TcpClient browser = await _tcpListener.AcceptTcpClientAsync();
           Console.WriteLine($"Client connected: {browser.Client.RemoteEndPoint}");
-          _connection.ProcessAsync(browser);
+          _transfer.ProcessAsync(browser);
         }
       }
       catch (SocketException ex)
@@ -42,17 +42,17 @@ namespace SOCKS_5_Proxy_Chain
       }
     }
     
-    private void SelectConnection(ConnectionType type)
+    private void SelectConnection(TransferType type)
     {
       switch (type)
       {
-        case ConnectionType.TEST:
-          _connection = new TestConnection(IPAddress.Any.ToString(), 11080);
+        case TransferType.DEFAULT:
+          _transfer = new DefaultTransfer(IPAddress.Any.ToString(), 11080);
           break;
       }
     }
     
     private TcpListener _tcpListener;
-    private IConnection _connection;
+    private ITransfer _transfer;
   }
 }

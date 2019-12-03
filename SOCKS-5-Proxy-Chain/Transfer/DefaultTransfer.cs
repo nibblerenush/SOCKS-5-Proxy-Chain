@@ -3,17 +3,17 @@ using System.Diagnostics;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace SOCKS_5_Proxy_Chain.Connection
+namespace SOCKS_5_Proxy_Chain.Transfer
 {
-  public class TestConnection : IConnection
+  public class DefaultTransfer : ITransfer
   {
-    public TestConnection(string remoteIpAddr, int remotePort)
+    public DefaultTransfer(string remoteIpAddress, int remotePort)
     {
-      _remoteIpAddr = remoteIpAddr;
+      _remoteIpAddress = remoteIpAddress;
       _remotePort = remotePort;
     }
-
-    public async void ProcessAsync(TcpClient browser)
+    
+    virtual public async void ProcessAsync(TcpClient browser)
     {
       try
       {
@@ -21,14 +21,10 @@ namespace SOCKS_5_Proxy_Chain.Connection
         {
           using (TcpClient server = new TcpClient())
           {
-            await server.ConnectAsync(_remoteIpAddr, _remotePort);
+            await server.ConnectAsync(_remoteIpAddress, _remotePort);
             Console.WriteLine($"Remote connected: {server.Client.RemoteEndPoint}");
-            
-            Task fromBrowser = Task.Run(async () => await FromBrowserToServer(browser.GetStream(), server.GetStream()));
-            Task fromServer = Task.Run(async () => await FromServerToBrowser(browser.GetStream(), server.GetStream()));
-            
-            await fromBrowser;
-            await fromServer;
+
+            await Transfer(browser.GetStream(), server.GetStream());
           }
         }
       }
@@ -39,6 +35,22 @@ namespace SOCKS_5_Proxy_Chain.Connection
       }
     }
 
+    protected async Task Transfer(NetworkStream browser, NetworkStream server)
+    {
+      Task fromBrowserToServer = Task.Run
+      (
+        async () => await FromBrowserToServer(browser, server)
+      );
+
+      Task fromServerToBrowser = Task.Run
+      (
+        async () => await FromServerToBrowser(server, browser)
+      );
+
+      await fromBrowserToServer;
+      await fromServerToBrowser;
+    }
+    
     private async Task FromBrowserToServer(NetworkStream browser, NetworkStream server)
     {
       byte[] buffer = new byte[BUFFER_SIZE];
@@ -48,8 +60,8 @@ namespace SOCKS_5_Proxy_Chain.Connection
         await server.WriteAsync(buffer, 0, readedSize);
       }
     }
-
-    private async Task FromServerToBrowser(NetworkStream browser, NetworkStream server)
+    
+    private async Task FromServerToBrowser(NetworkStream server, NetworkStream browser)
     {
       byte[] buffer = new byte[BUFFER_SIZE];
       int readedSize = 0;
@@ -58,9 +70,9 @@ namespace SOCKS_5_Proxy_Chain.Connection
         await browser.WriteAsync(buffer, 0, readedSize);
       }
     }
-
-    private string _remoteIpAddr;
-    private int _remotePort;
-    private const int BUFFER_SIZE = 1024;
+    
+    private readonly string _remoteIpAddress;
+    private readonly int _remotePort;
+    private const int BUFFER_SIZE = 2048;
   }
 }

@@ -4,7 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using SOCKS_5_Proxy_Chain.Connection;
+using SOCKS_5_Proxy_Chain.Transfer;
 
 namespace SOCKS_5_Proxy_Chain
 {
@@ -194,7 +194,7 @@ namespace SOCKS_5_Proxy_Chain
     public static async Task Main(string[] args)
     {
       CancellationTokenSource tokenSource = new CancellationTokenSource();
-      TcpServer server = new TcpServer(11081, ConnectionType.TEST);
+      TcpServer server = new TcpServer(11081, TransferType.DEFAULT);
       await server.RunAsync(tokenSource.Token);
     }
   }
