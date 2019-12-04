@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SOCKS_5_Proxy_Chain.Socks5
 {
-  class RequestHandshake
+  public class RequestHandshake
   {
     public RequestHandshake(byte ver, byte nmethods, List<byte> methods)
     {

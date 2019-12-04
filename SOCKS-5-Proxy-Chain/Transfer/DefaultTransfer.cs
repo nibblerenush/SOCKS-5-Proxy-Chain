@@ -25,8 +25,10 @@ namespace SOCKS_5_Proxy_Chain.Transfer
             await server.ConnectAsync(_remoteIpAddress, _remotePort);
             Console.WriteLine($"Remote connected: {server.Client.RemoteEndPoint}");
             
-            await this.HandshakeAsync(browser.GetStream(), server.GetStream());
-            await this.RunTransferringAsync(browser.GetStream(), server.GetStream());
+            if (await this.HandshakeAsync(browser.GetStream(), server.GetStream()))
+            {
+              await this.RunTransferringAsync(browser.GetStream(), server.GetStream());
+            }
           }
         }
       }
@@ -39,9 +41,9 @@ namespace SOCKS_5_Proxy_Chain.Transfer
     
     // Empty method
     // Need custom implementation for derived classes
-    protected virtual async Task HandshakeAsync(NetworkStream browser, NetworkStream server)
+    protected virtual async Task<bool> HandshakeAsync(NetworkStream browser, NetworkStream server)
     {
-      await Task.CompletedTask;
+      return await Task.FromResult<bool>(true);
     }
 
     private async Task RunTransferringAsync(NetworkStream browser, NetworkStream server)

@@ -176,8 +176,8 @@ namespace SOCKS_5_Proxy_Chain
 
         private TcpListener _tcpListener;
     private readonly uint _bufferSize;
-    private IReqHandCreator _reqHandCreator;
-    private IReqAuthCreator _reqAuthCreator;
+    //private IReqHandCreator _reqHandCreator;
+    //private IReqAuthCreator _reqAuthCreator;
   }
 
 
