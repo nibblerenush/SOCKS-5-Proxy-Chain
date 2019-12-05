@@ -1,18 +1,18 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 
-namespace SOCKS_5_Proxy_Chain
+namespace SOCKS_5_Proxy_Chain.Socks5Authentication
 {
-  interface IReqAuthCreator
+  class UnamePasswdAuthentication : IAuthentication
   {
-    byte[] GenReqAuth();
-    void CheckRepAuth(byte[] reply);
-  }
-
-  class UnamePasswdReqAuth : IReqAuthCreator
-  {
-    public byte[] GenReqAuth()
+    public async Task<bool> RunAsync(NetworkStream server)
+    {
+      return await Task.FromResult<bool>(false);
+    }
+    /*public byte[] GenReqAuth()
     {
       string username = Config.GetInst().Username;
       List<byte> uname = new List<byte>(Encoding.UTF8.GetBytes(username));
@@ -30,6 +30,6 @@ namespace SOCKS_5_Proxy_Chain
     {
       Socks5ReplyUnamePasswd repUnamePasswd = new Socks5ReplyUnamePasswd(reply);
       Debug.WriteLine(repUnamePasswd);
-    }
+    }*/
   }
 }

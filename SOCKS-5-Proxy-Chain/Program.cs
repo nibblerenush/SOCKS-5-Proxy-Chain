@@ -194,7 +194,7 @@ namespace SOCKS_5_Proxy_Chain
     public static async Task Main(string[] args)
     {
       CancellationTokenSource tokenSource = new CancellationTokenSource();
-      TcpServer server = new TcpServer(11081, TransferType.DEFAULT);
+      TcpServer server = new TcpServer(11081, TransferType.SOCKS5);
       await server.RunAsync(tokenSource.Token);
     }
   }
