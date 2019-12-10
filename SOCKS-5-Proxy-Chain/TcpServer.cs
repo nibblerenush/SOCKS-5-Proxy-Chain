@@ -47,10 +47,13 @@ namespace SOCKS_5_Proxy_Chain
       switch (type)
       {
         case TransferType.DEFAULT:
-          _transfer = new DefaultTransfer(IPAddress.Any.ToString(), 11080);
+          _transfer = new DefaultTransfer(Settings.Instance().Server.IpAddress,
+                                          Settings.Instance().Server.Port);
           break;
         case TransferType.SOCKS5:
-          _transfer = new Socks5Transfer(IPAddress.Any.ToString(), 11080, BaseConstants.Methods.UNAME_PASSWD);
+          _transfer = new Socks5Transfer(Settings.Instance().Server.IpAddress,
+                                         Settings.Instance().Server.Port,
+                                         BaseConstants.Methods.UNAME_PASSWD);
           break;
       }
     }

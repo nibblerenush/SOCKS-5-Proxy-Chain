@@ -1,20 +1,20 @@
 {
-  "server":
+  "Server":
   {
-    "ip_address": "127.0.0.1",
-    "port": 11080,
-    "method":
+    "IpAddress": "127.0.0.1",
+    "Port": 11080,
+    "Method":
     {
-      "uname_passwd":
+      "UnamePasswd":
       {
-        "uname": "test_uname",
-        "passwd": "test_passwd"
+        "Uname": "test_uname",
+        "Passwd": "test_passwd"
       }
     }
   },
-  "app":
+  "Application":
   {
-    "ip_address": "0.0.0.0",
-    "port": 11081
+    "IpAddress": "0.0.0.0",
+    "Port": 11081
   }
 }
