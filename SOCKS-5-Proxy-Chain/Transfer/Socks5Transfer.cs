@@ -2,6 +2,7 @@ using System;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using SOCKS_5_Proxy_Chain.Socks5;
+using SOCKS_5_Proxy_Chain.Socks5Authentication;
 
 namespace SOCKS_5_Proxy_Chain.Transfer
 {
@@ -13,6 +14,7 @@ namespace SOCKS_5_Proxy_Chain.Transfer
       {
         case BaseConstants.Methods.UNAME_PASSWD:
           _handshakeCreator = new UnamePasswdHandshakeCreator();
+          _authentication = new UnamePasswdAuthentication();
           break;
       }
     }
@@ -31,7 +33,7 @@ namespace SOCKS_5_Proxy_Chain.Transfer
       await this.Socks5HandshakeAsync(server);
 
       // Socks5 Authentication with server
-      if (await this.Socks5AuthenticationAsync(server))
+      if (await _authentication.RunAsync(server))
       {
         // To browser
         ReplyHandshake repHand = new ReplyHandshake(BaseConstants.Versions.SOCKS5,
@@ -56,12 +58,8 @@ namespace SOCKS_5_Proxy_Chain.Transfer
       Console.WriteLine($"Read reply handshake from server: {repHand}");
     }
 
-    private async Task<bool> Socks5AuthenticationAsync(NetworkStream server)
-    {
-      return await Task.FromResult<bool>(false);
-    }
-
     private IHandshakeCreator _handshakeCreator;
+    private IAuthentication _authentication;
     private const int BUFFER_SIZE = 1024;
   }
 }

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,26 +9,24 @@ namespace SOCKS_5_Proxy_Chain.Socks5Authentication
   {
     public async Task<bool> RunAsync(NetworkStream server)
     {
-      return await Task.FromResult<bool>(false);
-    }
-    /*public byte[] GenReqAuth()
-    {
-      string username = Config.GetInst().Username;
-      List<byte> uname = new List<byte>(Encoding.UTF8.GetBytes(username));
-      string password = Config.GetInst().Password;
-      List<byte> passwd = new List<byte>(Encoding.UTF8.GetBytes(password));
-      //
-      Socks5RequestUnamePasswd reqUnamePasswd = new Socks5RequestUnamePasswd(
-        BaseConstants.Versions.UNAME_PASSWD, (byte)uname.Count, uname, (byte)passwd.Count, passwd);
-      Debug.WriteLine(reqUnamePasswd);
-      //
-      return reqUnamePasswd.GenerateBuffer();
+      var uname = new List<byte>(Encoding.UTF8.GetBytes(Settings.Instance().Server.Method.UnamePasswd.Uname));
+      var passwd = new List<byte>(Encoding.UTF8.GetBytes(Settings.Instance().Server.Method.UnamePasswd.Passwd));
+      
+      var reqUnamePasswd = new RequestUnamePasswd(BaseConstants.Versions.UNAME_PASSWD,
+                                                  (byte)uname.Count,
+                                                  uname,
+                                                  (byte)passwd.Count,
+                                                  passwd);
+      byte[] buffer = reqUnamePasswd.GenBuff();
+      await server.WriteAsync(buffer, 0, buffer.Length);
+
+      int readedLength = await server.ReadAsync(buffer, 0, buffer.Length);
+      var repUnamePasswd = new ReplyUnamePasswd(buffer, readedLength);
+
+      return repUnamePasswd.Status == UNAME_PASSWD_SUCCESS ? true : false;
     }
 
-    public void CheckRepAuth(byte[] reply)
-    {
-      Socks5ReplyUnamePasswd repUnamePasswd = new Socks5ReplyUnamePasswd(reply);
-      Debug.WriteLine(repUnamePasswd);
-    }*/
+    private const byte UNAME_PASSWD_SUCCESS = 0;
+    private const byte UNAME_PASSWD_FAILURE = 1;
   }
 }
