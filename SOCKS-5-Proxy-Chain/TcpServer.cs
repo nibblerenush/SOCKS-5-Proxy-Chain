@@ -51,9 +51,18 @@ namespace SOCKS_5_Proxy_Chain
                                           Settings.Instance().Server.Port);
           break;
         case TransferType.SOCKS5:
-          _transfer = new Socks5Transfer(Settings.Instance().Server.IpAddress,
-                                         Settings.Instance().Server.Port,
-                                         BaseConstants.Methods.UNAME_PASSWD);
+          if (Settings.Instance().Server.Method.Name == "UnamePasswd")
+          {
+            _transfer = new Socks5Transfer(Settings.Instance().Server.IpAddress,
+                                           Settings.Instance().Server.Port,
+                                           BaseConstants.Methods.UNAME_PASSWD);
+          }
+          else if (Settings.Instance().Server.Method.Name == "LoginHmac")
+          {
+            _transfer = new Socks5Transfer(Settings.Instance().Server.IpAddress,
+                                           Settings.Instance().Server.Port,
+                                           BaseConstants.Methods.LOGIN_HMAC);
+          }
           break;
       }
     }

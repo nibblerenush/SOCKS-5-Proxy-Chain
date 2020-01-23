@@ -9,9 +9,17 @@ namespace SOCKS_5_Proxy_Chain
     public string Passwd { get; set; }
   }
 
+  public class LoginHmac
+  {
+    public string Login { get; set; }
+    public string HmacKey { get; set; }
+  }
+
   public class Method
   {
+    public string Name { get; set; }
     public UnamePasswd UnamePasswd { get; set; }
+    public LoginHmac LoginHmac { get; set; }
   }
 
   public class Server
