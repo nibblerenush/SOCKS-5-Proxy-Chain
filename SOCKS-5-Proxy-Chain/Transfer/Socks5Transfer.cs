@@ -18,6 +18,7 @@ namespace SOCKS_5_Proxy_Chain.Transfer
           break;
         case BaseConstants.Methods.LOGIN_HMAC:
           _handshakeCreator = new LoginHmacHandshakeCreator();
+          _authentication = new LoginHmacAuthentication();
           break;
       }
     }

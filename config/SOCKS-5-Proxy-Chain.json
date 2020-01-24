@@ -6,13 +6,11 @@
     "Method":
     {
       "Name": "LoginHmac",
-
       "UnamePasswd":
       {
         "Uname": "test_uname",
         "Passwd": "test_passwd"
       },
-      
       "LoginHmac":
       {
         "Login": "test_login",
